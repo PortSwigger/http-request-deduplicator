@@ -1,0 +1,13 @@
+Uuid: 283d5679977d4e07bf456a47cb2d8fe3
+ExtensionType: 1
+Name: HTTP Request Deduplicator
+RepoName: http-request-deduplicator
+ScreenVersion: 1.0.1
+SerialVersion: 1
+MinPlatformVersion: 30
+ProOnly: False
+Author: Johnfire45
+ShortDescription: Deduplicates HTTP proxy traffic using method, path, and body fingerprinting.
+EntryPoint: unireq-deduplicator-1.0.1.jar
+BuildCommand: mvn clean package
+SupportedProducts: Pro, Community

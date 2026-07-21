@@ -1,0 +1,23 @@
+<p>UniReq deduplicates HTTP requests passing through the proxy by generating a SHA-256 fingerprint from the request method, host, normalized path, and body content. Only unique requests are tracked and displayed, reducing noise when analyzing large volumes of traffic.</p>
+
+<h2>Features</h2>
+<ul>
+  <li>Deduplicates requests using a fingerprint of <code class=InlineCode>METHOD | HOST | NORMALIZED_PATH | SHA-256(BODY)</code>, so requests differing only in headers such as <code class=InlineCode>Cookie</code> or <code class=InlineCode>User-Agent</code> are treated as duplicates</li>
+  <li>Live request table showing method, host, path, status code, and timestamp for each unique request</li>
+  <li>Filter bar supporting host pattern matching with regex, case-sensitive, and invert toggle options, plus filtering by HTTP method and status code</li>
+  <li>Advanced filters for MIME type, file extension include/exclude lists, per-method and per-status-range filtering, and restriction to in-scope targets only</li>
+  <li>Integrated request and response viewer pane for inspecting the full content of any selected entry</li>
+  <li>One-click export of the currently visible filtered results to JSON, CSV, or Markdown</li>
+  <li>Stores up to 1000 unique entries using FIFO eviction; data is held in memory only for the current session</li>
+</ul>
+
+<h2>Usage</h2>
+<ol>
+  <li>Enable the extension by turning on the Enable toggle in the UniReq tab.</li>
+  <li>Browse your target normally. UniReq automatically captures and fingerprints each request passing through the proxy.</li>
+  <li>Open the UniReq tab to view the live table of unique requests.</li>
+  <li>Use the filter bar at the top of the table to narrow results by host pattern, HTTP method, or status code.</li>
+  <li>Click Advanced Filters to configure additional filters such as MIME type, file extensions, status code ranges, or scope restriction.</li>
+  <li>Click any row in the table to inspect the full request and response in the viewer pane below.</li>
+  <li>Click Export to save all currently visible table entries to a JSON, CSV, or Markdown file.</li>
+</ol>
