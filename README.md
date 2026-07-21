@@ -31,10 +31,10 @@
 3. Go to **Extensions → Extensions** tab
 4. Click **Add**
 5. Set **Extension type** to **Java**
-6. Click **Select file** and choose the downloaded `unireq-deduplicator-1.0.0.jar`
+6. Click **Select file** and choose the downloaded `unireq-deduplicator-1.0.1.jar`
 7. Click **Next** — the UniReq tab will appear in Burp's main tab bar
 
-**Requirements:** Burp Suite Pro v2023.12 or later (the extension uses the Montoya API).
+**Requirements:** Burp Suite Pro v2026.4 or later (the extension uses the Montoya API).
 
 ---
 
@@ -89,9 +89,6 @@ A: Make sure the **Enable** toggle in the UniReq tab is turned on and that traff
 **Q: The table is empty even though I can see requests in the Proxy history.**  
 A: Check whether a scope filter is active (Advanced Filters → Options → "Show only in-scope items") and whether the target is added to Burp's scope.
 
-**Q: Clicking Reset doesn't clear the Advanced Filters panel.**  
-A: Upgrade to the latest version — this was fixed in v1.0.0.
-
 **Q: Why do I see the same endpoint twice with different parameters?**  
 A: UniReq deduplicates by path + body hash. Different query strings or POST bodies produce different fingerprints, so both entries are expected.
 
@@ -102,9 +99,9 @@ A: Yes — the Export button exports whatever is currently visible in the table 
 
 ## Release Info
 
-- **Latest Version**: `v1.0.0`
+- **Latest Version**: `v1.0.1`
 - **Built With**: [Burp Montoya API](https://portswigger.net/burp/extender/api)
-- **Compatible With**: Burp Suite Pro v2023.12 and above
+- **Compatible With**: Burp Suite Pro v2026.4 and above
 - **License**: MIT
 
 ---
@@ -113,7 +110,7 @@ A: Yes — the Export button exports whatever is currently visible in the table 
 
 - No external network calls
 - Fully offline-capable
-- Sensitive headers (Authorization, Cookie, X-API-Key) are redacted in the request preview pane
+- Full request/response content is only written when you explicitly export it
 - No reflection, no eval, no unsafe deserialization
 
 ---
@@ -125,10 +122,10 @@ A: Yes — the Export button exports whatever is currently visible in the table 
 git clone https://github.com/Johnfire45/UniReq.git
 cd UniReq
 mvn clean package
-# Output: target/unireq-deduplicator-1.0.0.jar
+# Output: target/unireq-deduplicator-1.0.1.jar
 ```
 
-**Requirements:** Java 11+, Maven 3.6+
+**Requirements:** Java 17+, Maven 3.6+
 
 The Montoya API is declared as `provided` scope and excluded from the shaded JAR — Burp provides it at runtime.
 

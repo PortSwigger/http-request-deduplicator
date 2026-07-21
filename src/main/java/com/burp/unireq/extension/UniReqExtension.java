@@ -16,7 +16,7 @@ import com.burp.unireq.ui.UniReqGui;
 public class UniReqExtension implements BurpExtension {
 
     private static final String EXTENSION_NAME = "UniReq - HTTP Request Deduplicator";
-    private static final String EXTENSION_VERSION = "1.0.0";
+    private static final String EXTENSION_VERSION = "1.0.1";
 
     private MontoyaApi api;
     private Logging logging;

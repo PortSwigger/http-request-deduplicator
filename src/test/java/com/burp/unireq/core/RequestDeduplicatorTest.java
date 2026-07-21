@@ -1,6 +1,7 @@
 package com.burp.unireq.core;
 
 import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.http.HttpService;
 import burp.api.montoya.logging.Logging;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,6 +109,23 @@ class RequestDeduplicatorTest {
         HttpRequest r2 = mockRequest("GET", "example.com", "/api", "");
         assertTrue(deduplicator.isUniqueRequest(r1));
         assertTrue(deduplicator.isUniqueRequest(r2));
+    }
+
+    @Test
+    void identicalRequestsKeepTheirOwnResponsesWhenFilteringIsDisabled() {
+        deduplicator.setFilteringEnabled(false);
+        HttpRequest r1 = mockRequest("GET", "example.com", "/api", "");
+        HttpRequest r2 = mockRequest("GET", "example.com", "/api", "");
+        HttpResponse response1 = mock(HttpResponse.class);
+        HttpResponse response2 = mock(HttpResponse.class);
+
+        deduplicator.isUniqueRequest(r1);
+        deduplicator.isUniqueRequest(r2);
+        deduplicator.updateResponse(r1, response1);
+        deduplicator.updateResponse(r2, response2);
+
+        assertSame(response1, deduplicator.getStoredRequests().get(0).getResponse());
+        assertSame(response2, deduplicator.getStoredRequests().get(1).getResponse());
     }
 
     @Test

@@ -136,7 +136,7 @@ public class UniReqGui {
         // Add subtle separator
         JLabel separator = new JLabel("|");
         separator.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        separator.setForeground(new Color(150, 150, 150));
+        separator.setForeground(UIManager.getColor("Label.disabledForeground"));
         separator.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
         statsExportPanel.add(separator);
         
@@ -161,7 +161,7 @@ public class UniReqGui {
 
         JLabel noteLabel = new JLabel("All requests pass through the proxy unchanged — deduplication only affects what is shown in this tab", SwingConstants.CENTER);
         noteLabel.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 11));
-        noteLabel.setForeground(new Color(120, 120, 120));
+        noteLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
         noteLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 3, 10));
         titlePanel.add(noteLabel, BorderLayout.SOUTH);
 
@@ -378,7 +378,7 @@ public class UniReqGui {
                 
                 // Initialize export manager if needed
                 if (exportManager == null && api != null) {
-                    exportManager = new ExportManager(api.logging());
+                    exportManager = new ExportManager(api.logging(), api);
                 }
                 
                 if (exportManager != null) {
@@ -484,7 +484,7 @@ public class UniReqGui {
                 
                 // Initialize export manager if needed
                 if (exportManager == null && api != null) {
-                    exportManager = new ExportManager(api.logging());
+                    exportManager = new ExportManager(api.logging(), api);
                 }
                 
                 if (exportManager != null) {
@@ -701,6 +701,9 @@ public class UniReqGui {
             requestTablePanel.getFilterPanel().setApi(api);
         }
 
+        api.userInterface().applyThemeToComponent(mainPanel);
+        api.userInterface().applyThemeToComponent(getAdvancedFilterSettingsPanel());
+
         logging.logToOutput("UniReq GUI API initialized");
     }
     
@@ -865,4 +868,4 @@ public class UniReqGui {
             }
         });
     }
-} 
+}

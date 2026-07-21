@@ -2,7 +2,6 @@ package com.burp.unireq.core;
 
 import com.burp.unireq.model.FilterCriteria;
 import com.burp.unireq.model.RequestResponseEntry;
-import com.burp.unireq.utils.HttpUtils;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
@@ -26,7 +25,6 @@ import java.util.regex.PatternSyntaxException;
 public class FilterEngine {
 
     private final Logging logging;
-    private MontoyaApi montoyaApi;
 
     /**
      * Constructor initializes the filter engine with logging and API support.
@@ -36,7 +34,6 @@ public class FilterEngine {
      */
     public FilterEngine(Logging logging, MontoyaApi montoyaApi) {
         this.logging = logging;
-        this.montoyaApi = montoyaApi;
     }
 
     /**
@@ -46,7 +43,6 @@ public class FilterEngine {
      * @param montoyaApi The MontoyaApi instance
      */
     public void setApi(MontoyaApi montoyaApi) {
-        this.montoyaApi = montoyaApi;
         if (montoyaApi != null) {
             logging.logToOutput("FilterEngine API updated successfully");
         }
@@ -267,7 +263,12 @@ public class FilterEngine {
             return true;
         }
 
-        String extension = HttpUtils.getFileExtension(entry.getPath());
+        String extension = entry.getRequest().fileExtension();
+        if (extension == null) {
+            extension = "";
+        } else {
+            extension = extension.toLowerCase();
+        }
 
         if (excludedExtensions != null && !excludedExtensions.isEmpty()) {
             if (excludedExtensions.contains(extension)) {
@@ -290,18 +291,13 @@ public class FilterEngine {
             return true;
         }
 
-        if (montoyaApi == null) {
-            logging.logToError("Scope filter requested but MontoyaApi not available - failing open");
-            return true;
-        }
-
         try {
             HttpRequest request = entry.getRequest();
             if (request == null) {
                 return false;
             }
 
-            return montoyaApi.scope().isInScope(request.url());
+            return request.isInScope();
 
         } catch (Exception e) {
             logging.logToError("Error checking Burp scope: " + e.getMessage());

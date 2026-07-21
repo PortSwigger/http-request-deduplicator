@@ -6,6 +6,7 @@ import burp.api.montoya.logging.Logging;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.UUID;
 
 /**
@@ -98,16 +99,7 @@ public class FingerprintGenerator {
             digest.reset();
             byte[] hashBytes = digest.digest(contentToHash.getBytes(StandardCharsets.UTF_8));
 
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hashBytes) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-
-            return hexString.toString();
+            return HexFormat.of().formatHex(hashBytes);
 
         } catch (Exception e) {
             logging.logToError("Error computing content hash: " + e.getMessage());

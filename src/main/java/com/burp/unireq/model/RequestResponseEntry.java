@@ -4,31 +4,21 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 
 import java.time.ZonedDateTime;
-import java.util.regex.Pattern;
 
 /**
  * Represents a single HTTP transaction that was deemed unique.
  * 
  * This model class encapsulates an HTTP request/response pair along with
- * metadata such as timestamp, fingerprint, and safe content previews.
- * It includes sanitization features to remove sensitive headers and
- * truncate content for efficient UI display.
+ * metadata such as timestamp and fingerprint.
  * 
  * Key Features:
  * - Immutable request and timestamp
  * - Mutable response (set when received)
- * - Safe content previews with sensitive data redaction
  * - Helper methods for UI display
  * 
  * @author Harshit Shah
  */
 public class RequestResponseEntry {
-    
-    // Constants for content sanitization
-    private static final int MAX_PREVIEW_LENGTH = 10000; // Truncate long content for UI
-    private static final Pattern SENSITIVE_HEADER_PATTERN = Pattern.compile(
-        "(?i)(Authorization|Cookie|X-API-Key|Bearer):[^\r\n]*"
-    );
     
     // Core data
     private final HttpRequest request;
@@ -36,10 +26,6 @@ public class RequestResponseEntry {
     private final ZonedDateTime timestamp;
     private final String fingerprint;
     private final long sequenceNumber; // Original arrival order
-    
-    // Cached previews for UI performance
-    private final String requestPreview;
-    private String responsePreview;
     
     /**
      * Creates a new RequestResponseEntry with the provided request and fingerprint.
@@ -64,7 +50,6 @@ public class RequestResponseEntry {
         this.fingerprint = fingerprint;
         this.sequenceNumber = sequenceNumber;
         this.timestamp = ZonedDateTime.now();
-        this.requestPreview = createSafePreview(request.toString());
     }
     
     /**
@@ -76,35 +61,6 @@ public class RequestResponseEntry {
      */
     public void setResponse(HttpResponse response) {
         this.response = response;
-        if (response != null) {
-            this.responsePreview = createSafePreview(response.toString());
-        }
-    }
-    
-    /**
-     * Creates a safe preview of content by sanitizing sensitive headers
-     * and truncating long content for UI display.
-     * 
-     * Security Features:
-     * - Redacts Authorization, Cookie, X-API-Key, and Bearer headers
-     * - Truncates content longer than MAX_PREVIEW_LENGTH
-     * - Preserves structure for readability
-     * 
-     * @param content The raw HTTP content to sanitize
-     * @return Sanitized and truncated content preview
-     */
-    private String createSafePreview(String content) {
-        if (content == null) return "";
-        
-        // Remove sensitive headers (Authorization, Cookie, etc.)
-        String sanitized = SENSITIVE_HEADER_PATTERN.matcher(content).replaceAll("$1: [REDACTED]");
-        
-        // Truncate if too long
-        if (sanitized.length() > MAX_PREVIEW_LENGTH) {
-            return sanitized.substring(0, MAX_PREVIEW_LENGTH) + "\n... [TRUNCATED]";
-        }
-        
-        return sanitized;
     }
     
     // ==================== Getters ====================
@@ -142,20 +98,6 @@ public class RequestResponseEntry {
      */
     public long getSequenceNumber() { 
         return sequenceNumber; 
-    }
-    
-    /**
-     * @return Sanitized preview of the request content
-     */
-    public String getRequestPreview() { 
-        return requestPreview; 
-    }
-    
-    /**
-     * @return Sanitized preview of the response content (null if no response)
-     */
-    public String getResponsePreview() { 
-        return responsePreview; 
     }
     
     // ==================== UI Helper Methods ====================
@@ -209,4 +151,4 @@ public class RequestResponseEntry {
         return String.format("RequestResponseEntry{method='%s', path='%s', status='%s', timestamp='%s'}", 
             getMethod(), getPath(), getStatusCode(), getFormattedTimestamp());
     }
-} 
+}

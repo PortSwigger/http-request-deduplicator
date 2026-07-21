@@ -29,6 +29,7 @@ public class RequestDeduplicator {
 
     private final ConcurrentLinkedQueue<RequestResponseEntry> storedRequests;
     private final ConcurrentHashMap<String, RequestResponseEntry> fingerprintIndex;
+    private final ConcurrentHashMap<HttpRequest, RequestResponseEntry> requestIndex;
     private final AtomicBoolean filteringEnabled;
 
     private final AtomicLong totalRequests;
@@ -42,6 +43,7 @@ public class RequestDeduplicator {
         this.fingerprintGenerator = new FingerprintGenerator(logging);
         this.storedRequests = new ConcurrentLinkedQueue<>();
         this.fingerprintIndex = new ConcurrentHashMap<>();
+        this.requestIndex = new ConcurrentHashMap<>();
         this.filteringEnabled = new AtomicBoolean(true);
         this.totalRequests = new AtomicLong(0);
         this.uniqueRequests = new AtomicLong(0);
@@ -67,16 +69,16 @@ public class RequestDeduplicator {
                 return true;
             }
 
-            boolean isUnique = !fingerprintIndex.containsKey(fingerprint);
-
-            if (isUnique) {
+            RequestResponseEntry entry = createEntry(request, fingerprint);
+            RequestResponseEntry existing = fingerprintIndex.putIfAbsent(fingerprint, entry);
+            if (existing == null) {
                 uniqueRequests.incrementAndGet();
-                storeUniqueRequest(request, fingerprint);
-            } else {
-                duplicateRequests.incrementAndGet();
+                storeEntry(entry);
+                return true;
             }
 
-            return isUnique;
+            duplicateRequests.incrementAndGet();
+            return false;
 
         } catch (Exception e) {
             logging.logToError("Error processing request fingerprint: " + e.getMessage());
@@ -87,24 +89,34 @@ public class RequestDeduplicator {
 
     private void storeUniqueRequest(HttpRequest request, String fingerprint) {
         try {
-            long sequenceNumber = sequenceCounter.incrementAndGet();
-            RequestResponseEntry entry = new RequestResponseEntry(request, fingerprint, sequenceNumber);
-            storedRequests.offer(entry);
-            fingerprintIndex.put(fingerprint, entry);
-
-            if (storedRequests.size() >= MAX_STORED_REQUESTS && capWarningShown.compareAndSet(false, true)) {
-                logging.logToOutput("UniReq: display cap of " + MAX_STORED_REQUESTS
-                        + " entries reached — oldest entries will be rotated out");
-            }
-
-            while (storedRequests.size() > MAX_STORED_REQUESTS) {
-                RequestResponseEntry evicted = storedRequests.poll();
-                if (evicted != null) {
-                    fingerprintIndex.remove(evicted.getFingerprint());
-                }
-            }
+            RequestResponseEntry entry = createEntry(request, fingerprint);
+            fingerprintIndex.putIfAbsent(fingerprint, entry);
+            storeEntry(entry);
         } catch (Exception e) {
             logging.logToError("Error storing unique request: " + e.getMessage());
+        }
+    }
+
+    private RequestResponseEntry createEntry(HttpRequest request, String fingerprint) {
+        long sequenceNumber = sequenceCounter.incrementAndGet();
+        return new RequestResponseEntry(request, fingerprint, sequenceNumber);
+    }
+
+    private void storeEntry(RequestResponseEntry entry) {
+        storedRequests.offer(entry);
+        requestIndex.put(entry.getRequest(), entry);
+
+        if (storedRequests.size() >= MAX_STORED_REQUESTS && capWarningShown.compareAndSet(false, true)) {
+            logging.logToOutput("UniReq: display cap of " + MAX_STORED_REQUESTS
+                    + " entries reached - oldest entries will be rotated out");
+        }
+
+        while (storedRequests.size() > MAX_STORED_REQUESTS) {
+            RequestResponseEntry evicted = storedRequests.poll();
+            if (evicted != null) {
+                requestIndex.remove(evicted.getRequest(), evicted);
+                fingerprintIndex.remove(evicted.getFingerprint(), evicted);
+            }
         }
     }
 
@@ -113,8 +125,11 @@ public class RequestDeduplicator {
      */
     public void updateResponse(HttpRequest request, HttpResponse response) {
         try {
-            String fingerprint = fingerprintGenerator.computeFingerprint(request);
-            RequestResponseEntry entry = fingerprintIndex.get(fingerprint);
+            RequestResponseEntry entry = requestIndex.get(request);
+            if (entry == null) {
+                String fingerprint = fingerprintGenerator.computeFingerprint(request);
+                entry = fingerprintIndex.get(fingerprint);
+            }
             if (entry != null) {
                 entry.setResponse(response);
             }
@@ -142,6 +157,7 @@ public class RequestDeduplicator {
 
         storedRequests.clear();
         fingerprintIndex.clear();
+        requestIndex.clear();
         totalRequests.set(0);
         uniqueRequests.set(0);
         duplicateRequests.set(0);

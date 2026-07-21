@@ -63,14 +63,12 @@ public class ExportPanel extends JPanel {
         formatComboBox.setSelectedItem(ExportConfiguration.ExportFormat.JSON); // Default to JSON
         formatComboBox.setToolTipText("Select export format");
         formatComboBox.setBorder(SwingUtils.createRoundedBorder(SwingUtils.BORDER_RADIUS, SwingUtils.BORDER_COLOR));
-        formatComboBox.setBackground(Color.WHITE);
         
         // Create scope combo box with modern styling
         scopeComboBox = new JComboBox<>(new String[] { SCOPE_ALL_VISIBLE, SCOPE_SELECTED_ONLY });
         scopeComboBox.setSelectedItem(SCOPE_ALL_VISIBLE);
         scopeComboBox.setToolTipText("Select export scope");
         scopeComboBox.setBorder(SwingUtils.createRoundedBorder(SwingUtils.BORDER_RADIUS, SwingUtils.BORDER_COLOR));
-        scopeComboBox.setBackground(Color.WHITE);
         
         // Create export button using modern styling
         exportButton = SwingUtils.createModernButton(
@@ -108,7 +106,7 @@ public class ExportPanel extends JPanel {
         
         // Create compact status label (inline)
         statusLabel.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 9));
-        statusLabel.setForeground(new Color(100, 100, 100)); // Gray text
+        statusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
         statusLabel.setText("Ready");
         
         // Add components horizontally with compact spacing
@@ -267,4 +265,4 @@ public class ExportPanel extends JPanel {
             }
         });
     }
-} 
+}

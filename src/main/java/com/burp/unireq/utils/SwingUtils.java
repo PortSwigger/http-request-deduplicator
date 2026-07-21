@@ -12,15 +12,20 @@ import java.awt.event.ActionListener;
 public class SwingUtils {
 
     // Standard colors for the extension
-    public static final Color SUCCESS_COLOR = new Color(46, 125, 50);
-    public static final Color WARNING_COLOR = new Color(255, 152, 0);
-    public static final Color ERROR_COLOR = new Color(211, 47, 47);
-    public static final Color INFO_COLOR = new Color(25, 118, 210);
+    public static final Color SUCCESS_COLOR = themedColor("Label.foreground", Color.GREEN.darker());
+    public static final Color WARNING_COLOR = themedColor("Label.foreground", Color.ORANGE.darker());
+    public static final Color ERROR_COLOR = themedColor("Label.foreground", Color.RED.darker());
+    public static final Color INFO_COLOR = themedColor("Label.foreground", Color.BLUE.darker());
 
     // Modern UI constants
     public static final int BORDER_RADIUS = 8;
-    public static final Color BORDER_COLOR = new Color(200, 200, 200);
-    public static final Color HOVER_COLOR = new Color(245, 245, 245);
+    public static final Color BORDER_COLOR = themedColor("Component.borderColor", Color.GRAY);
+    public static final Color HOVER_COLOR = themedColor("Button.select", Color.LIGHT_GRAY);
+
+    private static Color themedColor(String key, Color fallback) {
+        Color color = UIManager.getColor(key);
+        return color != null ? color : fallback;
+    }
 
     /**
      * Creates a rounded border for modern UI components.
@@ -57,6 +62,11 @@ public class SwingUtils {
      */
     public static JButton createModernButton(String text, String tooltip, ActionListener listener) {
         JButton button = new JButton(text);
+        Color defaultBackground = UIManager.getColor("Button.background");
+        Color hoverBackground = UIManager.getColor("Button.select");
+        if (hoverBackground == null) {
+            hoverBackground = defaultBackground != null ? defaultBackground.brighter() : button.getBackground();
+        }
         if (tooltip != null && !tooltip.isEmpty()) {
             button.setToolTipText(tooltip);
         }
@@ -68,19 +78,22 @@ public class SwingUtils {
         button.setBorderPainted(false);
         button.setContentAreaFilled(false);
         button.setOpaque(true);
-        button.setBackground(Color.WHITE);
+        button.setBackground(defaultBackground != null ? defaultBackground : button.getBackground());
         button.setBorder(createRoundedBorder(BORDER_RADIUS, BORDER_COLOR));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        Color finalHoverBackground = hoverBackground;
+        Color finalDefaultBackground = defaultBackground != null ? defaultBackground : button.getBackground();
 
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                button.setBackground(HOVER_COLOR);
+                button.setBackground(finalHoverBackground);
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                button.setBackground(Color.WHITE);
+                button.setBackground(finalDefaultBackground);
             }
         });
 
@@ -133,7 +146,6 @@ public class SwingUtils {
 
         comboBox.setBorder(createRoundedBorder(BORDER_RADIUS, BORDER_COLOR));
         comboBox.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        comboBox.setBackground(Color.WHITE);
 
         return comboBox;
     }

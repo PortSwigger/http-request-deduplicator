@@ -88,7 +88,7 @@ public class ControlPanel extends JPanel {
         
         // Add status label inline if needed (or can be removed for extra compactness)
         statusLabel.setFont(new Font(Font.SANS_SERIF, Font.ITALIC, 10));
-        statusLabel.setForeground(new Color(100, 100, 100));
+        statusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
         statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
         add(statusLabel);
     }
@@ -158,13 +158,13 @@ public class ControlPanel extends JPanel {
                     statusLabel.setForeground(Color.BLACK);
                     break;
                 case WARNING:
-                    statusLabel.setForeground(new Color(204, 102, 0)); // Orange
+                    statusLabel.setForeground(SwingUtils.WARNING_COLOR);
                     break;
                 case ERROR:
                     statusLabel.setForeground(Color.RED);
                     break;
                 case SUCCESS:
-                    statusLabel.setForeground(new Color(0, 128, 0)); // Green
+                    statusLabel.setForeground(SwingUtils.SUCCESS_COLOR);
                     break;
             }
         });

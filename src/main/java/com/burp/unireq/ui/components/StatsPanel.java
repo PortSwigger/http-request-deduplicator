@@ -1,5 +1,7 @@
 package com.burp.unireq.ui.components;
 
+import com.burp.unireq.utils.SwingUtils;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -8,11 +10,11 @@ import java.awt.*;
  * 
  * This component displays the current deduplication statistics including
  * total requests processed, unique requests identified, and duplicate
- * requests blocked. It provides colored labels for better visual distinction.
+ * requests observed.
  * 
  * Features:
  * - Thread-safe statistics updates
- * - Color-coded labels (green for unique, red for duplicates)
+ * - Theme-aware status labels
  * - Clean titled border layout
  * - Bold font for emphasis on numbers
  * 
@@ -50,8 +52,8 @@ public class StatsPanel extends JPanel {
         
         // Create stats labels with compact formatting
         JPanel totalPanel = createStatPanel("Total:", totalLabel, Color.BLACK);
-        JPanel uniquePanel = createStatPanel("Unique:", uniqueLabel, new Color(0, 128, 0)); // Green
-        JPanel duplicatePanel = createStatPanel("Duplicates:", duplicateLabel, new Color(128, 0, 0)); // Red
+        JPanel uniquePanel = createStatPanel("Unique:", uniqueLabel, SwingUtils.SUCCESS_COLOR);
+        JPanel duplicatePanel = createStatPanel("Duplicates:", duplicateLabel, SwingUtils.ERROR_COLOR);
         JPanel visiblePanel = createStatPanel("Visible:", visibleLabel, Color.BLACK);
         
         // Add panels to main layout

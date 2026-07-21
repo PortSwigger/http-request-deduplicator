@@ -257,7 +257,7 @@ public class FilterPanel extends JPanel {
             // Update regex checkbox
             if (regexCheckBox.isSelected()) {
                 regexCheckBox.setFont(regexCheckBox.getFont().deriveFont(Font.BOLD));
-                regexCheckBox.setForeground(new Color(34, 139, 34)); // Forest green for active
+                regexCheckBox.setForeground(SwingUtils.SUCCESS_COLOR);
             } else {
                 regexCheckBox.setFont(regexCheckBox.getFont().deriveFont(Font.PLAIN));
                 regexCheckBox.setForeground(UIManager.getColor("Label.foreground"));
@@ -266,7 +266,7 @@ public class FilterPanel extends JPanel {
             // Update case checkbox
             if (caseCheckBox.isSelected()) {
                 caseCheckBox.setFont(caseCheckBox.getFont().deriveFont(Font.BOLD));
-                caseCheckBox.setForeground(new Color(34, 139, 34)); // Forest green for active
+                caseCheckBox.setForeground(SwingUtils.SUCCESS_COLOR);
             } else {
                 caseCheckBox.setFont(caseCheckBox.getFont().deriveFont(Font.PLAIN));
                 caseCheckBox.setForeground(UIManager.getColor("Label.foreground"));
@@ -275,7 +275,7 @@ public class FilterPanel extends JPanel {
             // Update invert checkbox
             if (invertCheckBox.isSelected()) {
                 invertCheckBox.setFont(invertCheckBox.getFont().deriveFont(Font.BOLD));
-                invertCheckBox.setForeground(new Color(184, 134, 11)); // Amber for invert (different action)
+                invertCheckBox.setForeground(SwingUtils.WARNING_COLOR);
             } else {
                 invertCheckBox.setFont(invertCheckBox.getFont().deriveFont(Font.PLAIN));
                 invertCheckBox.setForeground(UIManager.getColor("Label.foreground"));

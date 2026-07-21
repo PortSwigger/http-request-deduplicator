@@ -153,7 +153,7 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
     }
 
     private void buildLayout() {
-        setLayout(new BorderLayout());
+        setLayout(new GridBagLayout());
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JTabbedPane tabs = new JTabbedPane();
@@ -163,7 +163,6 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
         tabs.addTab("Patterns", buildPatternPanel());
         tabs.addTab("Extensions", buildExtensionPanel());
         tabs.addTab("Options", buildOptionsPanel());
-        add(tabs, BorderLayout.CENTER);
 
         JPanel buttonBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton clearButton = SwingUtils.createModernButton("Clear All", "Reset all advanced filters", null);
@@ -172,7 +171,18 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
             notifyListeners();
         });
         buttonBar.add(clearButton);
-        add(buttonBar, BorderLayout.SOUTH);
+
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.add(tabs, BorderLayout.CENTER);
+        contentPanel.add(buttonBar, BorderLayout.SOUTH);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        add(contentPanel, gbc);
     }
 
     private void wireChangeListeners() {
