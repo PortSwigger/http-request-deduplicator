@@ -20,6 +20,8 @@ import java.util.Set;
  * @author Harshit Shah
  */
 public class UniReqFilterDialog extends JDialog {
+
+    private static final int FILTER_FIELD_COLUMNS = 20;
     
     // Dialog result
     private FilterCriteria result = null;
@@ -47,8 +49,7 @@ public class UniReqFilterDialog extends JDialog {
     };
     
     // UI Components - Pattern Filters
-    private FilterFieldPanel hostFilterPanel;
-    private FilterFieldPanel pathFilterPanel;
+    private PatternFilterPanel patternFilterPanel;
     
     // UI Components - Extension Filters
     private JTextField includeExtensionsField;
@@ -114,12 +115,11 @@ public class UniReqFilterDialog extends JDialog {
         }
         
         // Pattern filter panels
-        hostFilterPanel = new FilterFieldPanel("Host", 200);
-        pathFilterPanel = new FilterFieldPanel("Path", 200);
+        patternFilterPanel = new PatternFilterPanel();
         
         // Extension fields
-        includeExtensionsField = SwingUtils.createModernTextField("e.g., php,jsp,asp", 150);
-        excludeExtensionsField = SwingUtils.createModernTextField("e.g., css,js,png", 150);
+        includeExtensionsField = SwingUtils.createModernTextField("e.g., php,jsp,asp", FILTER_FIELD_COLUMNS);
+        excludeExtensionsField = SwingUtils.createModernTextField("e.g., css,js,png", FILTER_FIELD_COLUMNS);
         
         // Option checkboxes
         requireResponseCheckbox = new JCheckBox("Hide items without responses");
@@ -140,6 +140,7 @@ public class UniReqFilterDialog extends JDialog {
         
         // Create tabbed pane for different filter categories
         JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         
         // Request Methods Tab
         tabbedPane.addTab("Methods", createMethodPanel());
@@ -171,7 +172,6 @@ public class UniReqFilterDialog extends JDialog {
      */
     private JPanel createMethodPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
@@ -191,7 +191,7 @@ public class UniReqFilterDialog extends JDialog {
             panel.add(methodCheckboxes[i], gbc);
         }
         
-        return panel;
+        return topAligned(panel);
     }
     
     /**
@@ -199,7 +199,6 @@ public class UniReqFilterDialog extends JDialog {
      */
     private JPanel createStatusPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
@@ -219,7 +218,7 @@ public class UniReqFilterDialog extends JDialog {
             panel.add(statusCheckboxes[i], gbc);
         }
         
-        return panel;
+        return topAligned(panel);
     }
     
     /**
@@ -227,7 +226,6 @@ public class UniReqFilterDialog extends JDialog {
      */
     private JPanel createMimeTypePanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
@@ -247,34 +245,14 @@ public class UniReqFilterDialog extends JDialog {
             panel.add(mimeCheckboxes[i], gbc);
         }
         
-        return panel;
+        return topAligned(panel);
     }
     
     /**
      * Creates the pattern filters panel (Host/Path).
      */
     private JPanel createPatternPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        
-        // Host filter
-        gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(new JLabel("Host:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
-        panel.add(hostFilterPanel, gbc);
-        
-        // Path filter
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0;
-        panel.add(new JLabel("Path:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0;
-        panel.add(pathFilterPanel, gbc);
-        
-        return panel;
+        return topAligned(patternFilterPanel);
     }
     
     /**
@@ -282,7 +260,6 @@ public class UniReqFilterDialog extends JDialog {
      */
     private JPanel createExtensionPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
@@ -307,7 +284,7 @@ public class UniReqFilterDialog extends JDialog {
         helpLabel.setForeground(Color.GRAY);
         panel.add(helpLabel, gbc);
         
-        return panel;
+        return topAligned(panel);
     }
     
     /**
@@ -315,7 +292,6 @@ public class UniReqFilterDialog extends JDialog {
      */
     private JPanel createOptionsPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
@@ -327,7 +303,18 @@ public class UniReqFilterDialog extends JDialog {
         gbc.gridy = 1;
         panel.add(onlyInScopeCheckbox, gbc);
         
-        return panel;
+        return topAligned(panel);
+    }
+
+    private JPanel topAligned(Component content) {
+        JPanel wrapper = new JPanel(new GridBagLayout());
+        wrapper.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        wrapper.add(content, gbc);
+        return wrapper;
     }
     
     /**
@@ -400,13 +387,11 @@ public class UniReqFilterDialog extends JDialog {
         criteria.setAllowedMimeTypes(allowedMimeTypes);
         
         // Host pattern
-        criteria.setHostPattern(hostFilterPanel.getText());
-        criteria.setRegexMode(hostFilterPanel.isRegexMode());
-        criteria.setCaseSensitive(hostFilterPanel.isCaseSensitive());
-        criteria.setInvertHostFilter(hostFilterPanel.isInvertMatch());
-        
-        // Path pattern
-        criteria.setPathPattern(pathFilterPanel.getText());
+        criteria.setHostPattern(patternFilterPanel.getHostPattern());
+        criteria.setPathPattern(patternFilterPanel.getPathPattern());
+        criteria.setRegexMode(patternFilterPanel.isRegexMode());
+        criteria.setCaseSensitive(patternFilterPanel.isCaseSensitive());
+        criteria.setInvertHostFilter(patternFilterPanel.isInvertHostFilter());
         
         // Extensions
         criteria.setIncludedExtensions(parseExtensions(includeExtensionsField.getText()));
@@ -447,15 +432,11 @@ public class UniReqFilterDialog extends JDialog {
         }
         
         // Host pattern
-        hostFilterPanel.setText(criteria.getHostPattern());
-        hostFilterPanel.setRegexMode(criteria.isRegexMode());
-        hostFilterPanel.setCaseSensitive(criteria.isCaseSensitive());
-        hostFilterPanel.setInvertMatch(criteria.isInvertHostFilter());
-        
-        // Path pattern
-        pathFilterPanel.setText(criteria.getPathPattern());
-        pathFilterPanel.setRegexMode(criteria.isRegexMode());
-        pathFilterPanel.setCaseSensitive(criteria.isCaseSensitive());
+        patternFilterPanel.setHostPattern(criteria.getHostPattern());
+        patternFilterPanel.setPathPattern(criteria.getPathPattern());
+        patternFilterPanel.setRegexMode(criteria.isRegexMode());
+        patternFilterPanel.setCaseSensitive(criteria.isCaseSensitive());
+        patternFilterPanel.setInvertHostFilter(criteria.isInvertHostFilter());
         
         // Extensions
         includeExtensionsField.setText(formatExtensions(criteria.getIncludedExtensions()));
@@ -486,8 +467,7 @@ public class UniReqFilterDialog extends JDialog {
         }
         
         // Clear pattern panels
-        hostFilterPanel.clear();
-        pathFilterPanel.clear();
+        patternFilterPanel.clear();
         
         // Clear extension fields
         includeExtensionsField.setText("");
@@ -545,4 +525,4 @@ public class UniReqFilterDialog extends JDialog {
     public boolean wasApplied() {
         return wasApplied;
     }
-} 
+}

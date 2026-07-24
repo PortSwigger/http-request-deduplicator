@@ -1,55 +1,62 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides development context for AI coding tools working in this repository.
 
 ## Project Overview
 
-UniReq is a Burp Suite extension (BApp) that deduplicates HTTP requests during security testing. It uses the Burp Montoya API and targets Burp Suite Pro v2023.12+.
+UniReq is a Java 17 Burp Suite extension that deduplicates HTTP requests observed by Burp Proxy. It uses the Montoya API 2026.4 and supports Burp Suite Professional and Community Edition 2026.4 or later.
 
-## Build Commands
+## Build and Test
 
 ```bash
-# Build the extension JAR
-mvn clean package
-# or use the provided scripts:
-./build.sh       # macOS/Linux
-build.bat        # Windows
+mvn clean verify
+# or:
+./build.sh
+build.bat
 ```
 
-Output: `target/unireq-deduplicator-1.0.0.jar`
+Output: `target/unireq-deduplicator-1.0.2.jar`
 
-**Prerequisites:** Java 11+, Maven 3.6+. No runtime dependencies — the Montoya API is `provided` scope (excluded from shaded JAR).
-
-**Tests:** JUnit Jupiter 5.9.2 is available. Run with `mvn test`.
+Prerequisites: Java 17+ and Maven 3.6+. The Montoya API is `provided` and is not bundled in the release JAR. JUnit and Mockito are test-only dependencies.
 
 ## Architecture
 
-The extension follows a layered architecture:
-
 ### Entry Point
-- `extension/UniReqExtension.java` — implements `BurpExtension`, initializes all components, registers the proxy listener
-- `extension/RequestFingerprintListener.java` — intercepts HTTP requests/responses via Burp's proxy hooks, applies deduplication, updates the GUI
+
+- `extension/UniReqExtension.java` initializes the extension, registers the suite tab, native settings panel, proxy handlers, and unload handler.
+- `extension/RequestFingerprintListener.java` observes Proxy requests and responses without modifying or blocking them.
 
 ### Core Logic
-- `core/FingerprintGenerator.java` — generates SHA-256 fingerprints with format `METHOD | NORMALIZED_PATH | HASH(CONTENT)`. Normalizes paths (lowercase, trims trailing slashes) and hashes body (POST/PUT/PATCH) or query string (GET)
-- `core/RequestDeduplicator.java` — thread-safe deduplication using `ConcurrentSkipListSet`, capped at 1000 entries (FIFO eviction), atomic counters for stats
-- `core/FilterEngine.java` — filters by method, status code, host, path/URL (with regex support), and Burp scope
+
+- `core/FingerprintGenerator.java` produces fingerprints in the form `METHOD | HOST | NORMALIZED_PATH | HASH(CONTENT)`. It uses a thread-local SHA-256 digest and skips large or recognized binary bodies.
+- `core/RequestDeduplicator.java` uses concurrent maps and a FIFO queue for request/response association, deduplication, and atomic statistics. Stored entries are capped at 1000.
+- `core/FilterEngine.java` applies method, status, MIME type, host/path, extension, response-presence, and Burp-scope filters.
 
 ### UI
-- `ui/UniReqGui.java` — main GUI coordinator; uses a 250ms debounced refresh to avoid lag
-- `ui/components/` — modular Swing components: `ControlPanel`, `ExportPanel`, `FilterPanel`, `FilterFieldPanel`, `RequestTablePanel`, `StatsPanel`, `UniReqFilterDialog`, `ViewerPanel`
+
+- `ui/UniReqGui.java` coordinates the main tab, exports, context actions, and debounced table refreshes.
+- `ui/components/AdvancedFilterSettingsPanel.java` implements Montoya's native `SettingsPanel`.
+- `ui/components/PatternFilterPanel.java` provides the shared host/path fields and explicit regex, case-sensitive, and inverted-host options.
+- Other components provide controls, statistics, filtering, the request table, request/response viewers, exports, and the modal compatibility fallback.
 
 ### Export
-- `export/ExportManager.java` — coordinates export operations
-- Format exporters: `JsonExporter`, `CsvExporter`, `MarkdownExporter`
+
+- `export/ExportManager.java` coordinates JSON, CSV, and Markdown exports.
+- File writes run in `SwingWorker` background tasks so the Swing event thread remains responsive.
+- Exporters escape untrusted HTTP-derived content for their respective formats.
 
 ### Models
-- `model/RequestResponseEntry.java` — wraps a complete HTTP transaction (request + response), fingerprint, timestamp, sequence number
-- `model/FilterCriteria.java` — filter configuration (method, status, host, path, regex, scope, case sensitivity)
-- `model/ExportConfiguration.java` — export job spec (format, path, entries, metadata flags)
 
-## Key Design Decisions
+- `model/RequestResponseEntry.java` represents a captured request, optional response, fingerprint, timestamp, and arrival sequence.
+- `model/FilterCriteria.java` contains basic and advanced filter state and compiled regex patterns.
+- `model/ExportConfiguration.java` describes an export job.
 
-- **Thread safety**: All shared state in `RequestDeduplicator` uses concurrent data structures and atomic operations. UI updates from non-EDT threads must go through `SwingUtilities.invokeLater`.
-- **No external runtime dependencies**: The fat JAR (via Maven Shade Plugin) excludes the Montoya API, which Burp provides at runtime.
-- **Burp integration points**: Repeater/Comparer sends, scope filtering, and HTTP editors use Montoya API interfaces passed in at initialization. Guard against null API references when Burp features are unavailable.
+## Design Constraints
+
+- All proxy traffic continues unchanged; deduplication only affects UniReq's displayed entries.
+- Shared deduplication state must remain thread-safe.
+- Swing components must only be mutated on the event-dispatch thread.
+- Potentially slow file writes must remain off the event-dispatch thread.
+- All dialogs and file choosers must have a Burp-owned parent component.
+- UI colors and components must remain compatible with Burp light and dark themes.
+- The extension must unload cleanly by stopping timers and clearing retained state.
