@@ -127,5 +127,3 @@ mvn clean verify
 **Requirements:** Java 17+, Maven 3.6+
 
 The Montoya API is declared as `provided` scope and excluded from the shaded JAR — Burp provides it at runtime.
-
-See [CLAUDE.md](CLAUDE.md) for architecture details and design decisions.
