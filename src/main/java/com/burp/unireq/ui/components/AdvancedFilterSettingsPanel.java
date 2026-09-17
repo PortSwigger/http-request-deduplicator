@@ -18,6 +18,8 @@ import java.util.Set;
  */
 public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel {
 
+    private static final int FILTER_FIELD_COLUMNS = 20;
+
     private static final String[] HTTP_METHODS = {
         "GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "TRACE"
     };
@@ -31,8 +33,7 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
     private JCheckBox[] methodCheckboxes;
     private JCheckBox[] statusCheckboxes;
     private JCheckBox[] mimeCheckboxes;
-    private FilterFieldPanel hostFilterPanel;
-    private FilterFieldPanel pathFilterPanel;
+    private PatternFilterPanel patternFilterPanel;
     private JTextField includeExtensionsField;
     private JTextField excludeExtensionsField;
     private JCheckBox requireResponseCheckbox;
@@ -69,11 +70,11 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
         }
         criteria.setAllowedMimeTypes(mimeTypes);
 
-        criteria.setHostPattern(hostFilterPanel.getText());
-        criteria.setRegexMode(hostFilterPanel.isRegexMode());
-        criteria.setCaseSensitive(hostFilterPanel.isCaseSensitive());
-        criteria.setInvertHostFilter(hostFilterPanel.isInvertMatch());
-        criteria.setPathPattern(pathFilterPanel.getText());
+        criteria.setHostPattern(patternFilterPanel.getHostPattern());
+        criteria.setPathPattern(patternFilterPanel.getPathPattern());
+        criteria.setRegexMode(patternFilterPanel.isRegexMode());
+        criteria.setCaseSensitive(patternFilterPanel.isCaseSensitive());
+        criteria.setInvertHostFilter(patternFilterPanel.isInvertHostFilter());
 
         criteria.setIncludedExtensions(parseExtensions(includeExtensionsField.getText()));
         criteria.setExcludedExtensions(parseExtensions(excludeExtensionsField.getText()));
@@ -101,13 +102,11 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
         for (int i = 0; i < mimeCheckboxes.length; i++) {
             mimeCheckboxes[i].setSelected(mimeTypes.contains(MIME_TYPES[i]));
         }
-        hostFilterPanel.setText(criteria.getHostPattern());
-        hostFilterPanel.setRegexMode(criteria.isRegexMode());
-        hostFilterPanel.setCaseSensitive(criteria.isCaseSensitive());
-        hostFilterPanel.setInvertMatch(criteria.isInvertHostFilter());
-        pathFilterPanel.setText(criteria.getPathPattern());
-        pathFilterPanel.setRegexMode(criteria.isRegexMode());
-        pathFilterPanel.setCaseSensitive(criteria.isCaseSensitive());
+        patternFilterPanel.setHostPattern(criteria.getHostPattern());
+        patternFilterPanel.setPathPattern(criteria.getPathPattern());
+        patternFilterPanel.setRegexMode(criteria.isRegexMode());
+        patternFilterPanel.setCaseSensitive(criteria.isCaseSensitive());
+        patternFilterPanel.setInvertHostFilter(criteria.isInvertHostFilter());
         includeExtensionsField.setText(formatExtensions(criteria.getIncludedExtensions()));
         excludeExtensionsField.setText(formatExtensions(criteria.getExcludedExtensions()));
         requireResponseCheckbox.setSelected(criteria.isRequireResponse());
@@ -118,8 +117,7 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
         for (JCheckBox cb : methodCheckboxes) cb.setSelected(false);
         for (JCheckBox cb : statusCheckboxes) cb.setSelected(false);
         for (JCheckBox cb : mimeCheckboxes) cb.setSelected(false);
-        hostFilterPanel.clear();
-        pathFilterPanel.clear();
+        patternFilterPanel.clear();
         includeExtensionsField.setText("");
         excludeExtensionsField.setText("");
         requireResponseCheckbox.setSelected(false);
@@ -142,47 +140,40 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
         mimeCheckboxes = new JCheckBox[MIME_TYPES.length];
         for (int i = 0; i < MIME_TYPES.length; i++) mimeCheckboxes[i] = new JCheckBox(MIME_TYPES[i]);
 
-        hostFilterPanel = new FilterFieldPanel("Host", 200);
-        pathFilterPanel = new FilterFieldPanel("Path", 200);
+        patternFilterPanel = new PatternFilterPanel();
 
-        includeExtensionsField = SwingUtils.createModernTextField("e.g., php,jsp,asp", 150);
-        excludeExtensionsField = SwingUtils.createModernTextField("e.g., css,js,png", 150);
+        includeExtensionsField = SwingUtils.createModernTextField("e.g., php,jsp,asp", FILTER_FIELD_COLUMNS);
+        excludeExtensionsField = SwingUtils.createModernTextField("e.g., css,js,png", FILTER_FIELD_COLUMNS);
 
         requireResponseCheckbox = new JCheckBox("Hide items without responses");
         onlyInScopeCheckbox = new JCheckBox("Show only in-scope items");
     }
 
     private void buildLayout() {
-        setLayout(new GridBagLayout());
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        setLayout(new BorderLayout(0, 8));
+        setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+
+        JPanel header = new JPanel(new BorderLayout(12, 0));
+        header.add(new JLabel("Configure request filters. Changes are applied immediately."), BorderLayout.WEST);
+
+        JButton clearButton = new JButton("Reset all filters");
+        clearButton.setToolTipText("Reset all advanced request filters");
+        clearButton.addActionListener(e -> {
+            clearAll();
+            notifyListeners();
+        });
+        header.add(clearButton, BorderLayout.EAST);
+        add(header, BorderLayout.NORTH);
 
         JTabbedPane tabs = new JTabbedPane();
+        tabs.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
         tabs.addTab("Methods", buildMethodPanel());
         tabs.addTab("Status", buildStatusPanel());
         tabs.addTab("MIME Types", buildMimePanel());
         tabs.addTab("Patterns", buildPatternPanel());
         tabs.addTab("Extensions", buildExtensionPanel());
         tabs.addTab("Options", buildOptionsPanel());
-
-        JPanel buttonBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton clearButton = SwingUtils.createModernButton("Clear All", "Reset all advanced filters", null);
-        clearButton.addActionListener(e -> {
-            clearAll();
-            notifyListeners();
-        });
-        buttonBar.add(clearButton);
-
-        JPanel contentPanel = new JPanel(new BorderLayout());
-        contentPanel.add(tabs, BorderLayout.CENTER);
-        contentPanel.add(buttonBar, BorderLayout.SOUTH);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        add(contentPanel, gbc);
+        add(tabs, BorderLayout.CENTER);
     }
 
     private void wireChangeListeners() {
@@ -200,6 +191,7 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
         };
         includeExtensionsField.getDocument().addDocumentListener(dl);
         excludeExtensionsField.getDocument().addDocumentListener(dl);
+        patternFilterPanel.addChangeListener(this::notifyListeners);
     }
 
     private void notifyListeners() {
@@ -210,7 +202,6 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
 
     private JPanel buildMethodPanel() {
         JPanel p = new JPanel(new GridBagLayout());
-        p.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST; gbc.insets = new Insets(2, 5, 2, 5);
         JLabel title = new JLabel("Show only these HTTP methods:");
@@ -222,12 +213,11 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
             gbc.gridx = i % 4; gbc.gridy = 1 + i / 4;
             p.add(methodCheckboxes[i], gbc);
         }
-        return p;
+        return topAligned(p);
     }
 
     private JPanel buildStatusPanel() {
         JPanel p = new JPanel(new GridBagLayout());
-        p.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST; gbc.insets = new Insets(2, 5, 2, 5);
         JLabel title = new JLabel("Show only these status code ranges:");
@@ -239,12 +229,11 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
             gbc.gridx = i; gbc.gridy = 1;
             p.add(statusCheckboxes[i], gbc);
         }
-        return p;
+        return topAligned(p);
     }
 
     private JPanel buildMimePanel() {
         JPanel p = new JPanel(new GridBagLayout());
-        p.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST; gbc.insets = new Insets(2, 5, 2, 5);
         JLabel title = new JLabel("Show only these MIME types:");
@@ -256,25 +245,15 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
             gbc.gridx = i % 2; gbc.gridy = 1 + i / 2;
             p.add(mimeCheckboxes[i], gbc);
         }
-        return p;
+        return topAligned(p);
     }
 
     private JPanel buildPatternPanel() {
-        JPanel p = new JPanel(new GridBagLayout());
-        p.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.WEST; gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 0; gbc.gridy = 0; p.add(new JLabel("Host:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; p.add(hostFilterPanel, gbc);
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0; p.add(new JLabel("Path:"), gbc);
-        gbc.gridx = 1; gbc.weightx = 1.0; p.add(pathFilterPanel, gbc);
-        return p;
+        return topAligned(patternFilterPanel);
     }
 
     private JPanel buildExtensionPanel() {
         JPanel p = new JPanel(new GridBagLayout());
-        p.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST; gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -286,17 +265,27 @@ public class AdvancedFilterSettingsPanel extends JPanel implements SettingsPanel
         JLabel help = new JLabel("<html><i>Separate with commas (e.g., php,jsp,asp)</i></html>");
         help.setForeground(Color.GRAY);
         p.add(help, gbc);
-        return p;
+        return topAligned(p);
     }
 
     private JPanel buildOptionsPanel() {
         JPanel p = new JPanel(new GridBagLayout());
-        p.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST; gbc.insets = new Insets(5, 5, 5, 5);
         gbc.gridx = 0; gbc.gridy = 0; p.add(requireResponseCheckbox, gbc);
         gbc.gridy = 1; p.add(onlyInScopeCheckbox, gbc);
-        return p;
+        return topAligned(p);
+    }
+
+    private JPanel topAligned(Component content) {
+        JPanel wrapper = new JPanel(new GridBagLayout());
+        wrapper.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        wrapper.add(content, gbc);
+        return wrapper;
     }
 
     private Set<String> parseExtensions(String text) {

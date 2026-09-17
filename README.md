@@ -8,10 +8,10 @@
 
 - **Deduplication of HTTP Requests** — track only unique requests as traffic flows through the proxy
 - **Host, Method, Status & MIME Type Filtering** — narrow down the request table in real-time
-- **Regex, Case-Sensitive, and Invert Toggles** — flexible pattern matching for host and path filters
-- **Advanced Filters** — per-method, per-status-range, file extension include/exclude, scope restriction
+- **Flexible Pattern Matching** — shared regex and case-sensitive matching options, plus host-match exclusion
+- **Advanced Filters** — per-method, per-status-range, file extension include/exclude, and scope filtering
 - **Export to JSON, CSV, and Markdown** — one-click export of visible results with metadata
-- **Burp Scope Integration** — optionally restrict tracking to in-scope targets only
+- **Burp Scope Integration** — optionally show only requests that are in the configured Burp scope
 - **Native Burp Settings Panel** — advanced filter settings accessible from Burp's Settings dialog
 
 ---
@@ -20,21 +20,21 @@
 
 ### From the BApp Store
 
-1. Open Burp Suite Pro
+1. Open Burp Suite Professional or Community Edition
 2. Go to **Extensions → BApp Store**
 3. Search for **UniReq** and click **Install**
 
 ### Manual Installation (from JAR)
 
 1. Download the latest JAR from the [Releases page](https://github.com/Johnfire45/UniReq/releases)
-2. Open Burp Suite Pro
+2. Open Burp Suite Professional or Community Edition
 3. Go to **Extensions → Extensions** tab
 4. Click **Add**
 5. Set **Extension type** to **Java**
-6. Click **Select file** and choose the downloaded `unireq-deduplicator-1.0.1.jar`
+6. Click **Select file** and choose the downloaded `unireq-deduplicator-1.0.2.jar`
 7. Click **Next** — the UniReq tab will appear in Burp's main tab bar
 
-**Requirements:** Burp Suite Pro v2026.4 or later (the extension uses the Montoya API).
+**Requirements:** Burp Suite Professional or Community Edition v2026.4 or later.
 
 ---
 
@@ -77,7 +77,6 @@ Two requests are considered duplicates if they produce the same fingerprint. Req
 - **Headers not fingerprinted** — changes to `Authorization`, `Cookie`, or other headers do not produce a new unique entry
 - **1000-entry cap** — the oldest entries are evicted once 1000 unique requests are stored (FIFO); data is not persisted across Burp restarts
 - **No persistence** — closing or reloading Burp clears all tracked requests
-- **HTTP/1.x-centric** — the fingerprint format assumes standard HTTP/1.x request structure
 
 ---
 
@@ -90,7 +89,7 @@ A: Make sure the **Enable** toggle in the UniReq tab is turned on and that traff
 A: Check whether a scope filter is active (Advanced Filters → Options → "Show only in-scope items") and whether the target is added to Burp's scope.
 
 **Q: Why do I see the same endpoint twice with different parameters?**  
-A: UniReq deduplicates by path + body hash. Different query strings or POST bodies produce different fingerprints, so both entries are expected.
+A: UniReq deduplicates by method, host, normalized path, and relevant content. Different query strings or request bodies produce different fingerprints, so both entries are expected.
 
 **Q: Can I export only the filtered results?**  
 A: Yes — the Export button exports whatever is currently visible in the table after filters are applied.
@@ -99,9 +98,9 @@ A: Yes — the Export button exports whatever is currently visible in the table 
 
 ## Release Info
 
-- **Latest Version**: `v1.0.1`
+- **Latest Version**: `v1.0.2`
 - **Built With**: [Burp Montoya API](https://portswigger.net/burp/extender/api)
-- **Compatible With**: Burp Suite Pro v2026.4 and above
+- **Compatible With**: Burp Suite Professional and Community Edition v2026.4 and above
 - **License**: MIT
 
 ---
@@ -121,12 +120,10 @@ A: Yes — the Export button exports whatever is currently visible in the table 
 # Clone and build
 git clone https://github.com/Johnfire45/UniReq.git
 cd UniReq
-mvn clean package
-# Output: target/unireq-deduplicator-1.0.1.jar
+mvn clean verify
+# Output: target/unireq-deduplicator-1.0.2.jar
 ```
 
 **Requirements:** Java 17+, Maven 3.6+
 
 The Montoya API is declared as `provided` scope and excluded from the shaded JAR — Burp provides it at runtime.
-
-See [CLAUDE.md](CLAUDE.md) for architecture details and design decisions.
